@@ -16,12 +16,16 @@
 
 package com.google.ar.sceneform.samples.augmentedimage;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.Image;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.ar.core.Anchor;
 import com.google.ar.core.AugmentedImage;
@@ -31,18 +35,18 @@ import com.google.ar.core.ImageFormat;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
+import com.google.ar.core.exceptions.NotYetAvailableException;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.FrameTime;
 import com.google.ar.sceneform.rendering.ViewRenderable;
+import com.google.ar.sceneform.samples.augmentedimage.flowgate.flowgateClient;
 import com.google.ar.sceneform.samples.common.helpers.SnackbarHelper;
 import com.google.ar.sceneform.ux.ArFragment;
+import com.google.mlkit.vision.common.InputImage;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-
-
-//import  com.google.ar.sceneform.samples.augmentedimage.BarcodeScan;
 
 /**
  * This application demonstrates using augmented images to place anchor nodes. app to include image
@@ -67,6 +71,8 @@ public class AugmentedImageActivity extends AppCompatActivity {
   // Augmented image and its associated center pose anchor, keyed by the augmented image in
   // the database.
   private final Map<AugmentedImage, AugmentedImageNode> augmentedImageMap = new HashMap<>();
+  flowgateClient fc = new flowgateClient("202.121.180.32", "admin",
+          "Ar_InDataCenter_450");
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -172,6 +178,22 @@ public class AugmentedImageActivity extends AppCompatActivity {
       }
     }
 
+
+    try (final Image image = arFragment.getArSceneView().getArFrame().acquireCameraImage()) {
+      if (image.getFormat() == ImageFormat.YUV_420_888) {
+        Bitmap bitmapImage = YUV420toBitmap.getBitmap(image);
+        BarcodeScan barScanning = new BarcodeScan();
+        InputImage inputImage = InputImage.fromBitmap(bitmapImage, 0);
+
+        TextView textView = (TextView) testRenderable.getView();
+        Context context = this.getApplicationContext();
+
+        barScanning.scanBarcodes(inputImage, fc, context, textView);
+        image.close();
+      }
+    } catch (NotYetAvailableException e) {
+      Log.e("TAG", e.getMessage());
+    }
 
   }
 }
