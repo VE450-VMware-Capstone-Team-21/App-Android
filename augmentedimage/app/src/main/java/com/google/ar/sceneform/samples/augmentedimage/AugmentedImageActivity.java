@@ -23,6 +23,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -31,17 +32,22 @@ import com.google.ar.core.Anchor;
 import com.google.ar.core.AugmentedImage;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
+import com.google.ar.core.HitResult;
 import com.google.ar.core.ImageFormat;
+import com.google.ar.core.Plane;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.NotYetAvailableException;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.FrameTime;
+import com.google.ar.sceneform.HitTestResult;
+import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.samples.augmentedimage.flowgate.flowgateClient;
 import com.google.ar.sceneform.samples.common.helpers.SnackbarHelper;
 import com.google.ar.sceneform.ux.ArFragment;
+import com.google.ar.sceneform.ux.TransformableNode;
 import com.google.mlkit.vision.common.InputImage;
 
 import java.util.Collection;
@@ -64,7 +70,6 @@ public class AugmentedImageActivity extends AppCompatActivity {
   private ArFragment arFragment;
   private ImageView fitToScanView;
 
-
   private ViewRenderable testRenderable;
   private AnchorNode anchorNode;
 
@@ -73,6 +78,7 @@ public class AugmentedImageActivity extends AppCompatActivity {
   private final Map<AugmentedImage, AugmentedImageNode> augmentedImageMap = new HashMap<>();
   flowgateClient fc = new flowgateClient("202.121.180.32", "admin",
           "Ar_InDataCenter_450");
+  TextView dialogue;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +88,10 @@ public class AugmentedImageActivity extends AppCompatActivity {
     arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
     fitToScanView = findViewById(R.id.image_view_fit_to_scan);
 
+    dialogue = (TextView) findViewById(R.id.disp1);
+    String status = "Detecting";
+    dialogue.setText(status);
+
     // Build the 2D renderable
     ViewRenderable.builder()
             .setView(this, R.layout.card_view)
@@ -89,6 +99,7 @@ public class AugmentedImageActivity extends AppCompatActivity {
             .thenAccept(renderable -> testRenderable = renderable);
 
     arFragment.getArSceneView().getScene().addOnUpdateListener(this::onSceneUpdate);
+
   }
 
   @Override
@@ -155,8 +166,9 @@ public class AugmentedImageActivity extends AppCompatActivity {
         case PAUSED:
           // When an image is in PAUSED state, but the camera is not PAUSED, it has been detected,
           // but not yet tracked.
-          String text = "Detected Image " + augmentedImage.getIndex();
+          String text = "Device detected"; //+ augmentedImage.getIndex();
           SnackbarHelper.getInstance().showMessage(this, text);
+
           break;
 
         case TRACKING:
@@ -169,6 +181,9 @@ public class AugmentedImageActivity extends AppCompatActivity {
             node.setImage(augmentedImage);
             augmentedImageMap.put(augmentedImage, node);
             arFragment.getArSceneView().getScene().addChild(node);
+
+            String status = "Device detected";
+            dialogue.setText(status);
           }
           break;
 
@@ -178,8 +193,8 @@ public class AugmentedImageActivity extends AppCompatActivity {
       }
     }
 
-
     try (final Image image = arFragment.getArSceneView().getArFrame().acquireCameraImage()) {
+
       if (image.getFormat() == ImageFormat.YUV_420_888) {
         Bitmap bitmapImage = YUV420toBitmap.getBitmap(image);
         BarcodeScan barScanning = new BarcodeScan();
@@ -188,12 +203,16 @@ public class AugmentedImageActivity extends AppCompatActivity {
         TextView textView = (TextView) testRenderable.getView();
         Context context = this.getApplicationContext();
 
-        barScanning.scanBarcodes(inputImage, fc, context, textView);
+        //SnackbarHelper sb = SnackbarHelper.getInstance();
+
+        barScanning.scanBarcodes(inputImage, fc, context, dialogue, textView);
         image.close();
       }
     } catch (NotYetAvailableException e) {
       Log.e("TAG", e.getMessage());
     }
+
+
 
   }
 }

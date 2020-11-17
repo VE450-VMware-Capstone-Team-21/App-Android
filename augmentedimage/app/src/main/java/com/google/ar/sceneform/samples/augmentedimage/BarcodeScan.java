@@ -1,5 +1,6 @@
 package com.google.ar.sceneform.samples.augmentedimage;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
@@ -12,6 +13,7 @@ import androidx.annotation.NonNull;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.ar.sceneform.samples.common.helpers.SnackbarHelper;
 import com.google.mlkit.vision.barcode.Barcode;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
@@ -24,7 +26,8 @@ import com.google.ar.sceneform.samples.augmentedimage.flowgate.flowgateClient;
 
 public class BarcodeScan {
 	private static final String TAG = "Barcode Detect";
-	public void scanBarcodes(InputImage image, flowgateClient fc, Context context, TextView textView) {
+	public void scanBarcodes(InputImage image, flowgateClient fc, Context context,
+							 TextView dialogue, TextView textView) {
 		BarcodeScannerOptions options =
 			new BarcodeScannerOptions.Builder()
 				.setBarcodeFormats(Barcode.FORMAT_CODE_128)
@@ -47,6 +50,13 @@ public class BarcodeScan {
 //
 						String rawValue = barcode.getRawValue();
 						Log.d(TAG, "The id is: " + rawValue);
+						String disp = "Bar code detected";
+						dialogue.setText(disp);
+
+						//Activity activity = (Activity) context;
+						//String text = "Bar code detected"; //+ augmentedImage.getIndex();
+						//SnackbarHelper.getInstance().showMessage(activity, text);
+
 
 						Thread t = new Thread(){
 							@Override

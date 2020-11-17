@@ -20,20 +20,26 @@
     tools:context=".AugmentedImageActivity">
 
 
-    <fragment android:name="com.google.ar.sceneform.samples.augmentedimage.AugmentedImageFragment"
+    <fragment
         android:id="@+id/ux_fragment"
+        android:name="com.google.ar.sceneform.samples.augmentedimage.AugmentedImageFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
 
-  <ImageView
-      android:id="@+id/image_view_fit_to_scan"
-      android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      android:layout_gravity="center"
-      android:scaleType="fitCenter"
-      android:src="@drawable/fit_to_scan"
-      android:contentDescription="@string/fit_image_to_scan"
-      />
+    <ImageView
+        android:id="@+id/image_view_fit_to_scan"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:contentDescription="@string/fit_image_to_scan"
+        android:scaleType="fitCenter"
+        android:src="@drawable/fit_to_scan" />
+
+    <TextView
+        android:id="@+id/disp1"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:text="TextView" />
 
 </FrameLayout>
