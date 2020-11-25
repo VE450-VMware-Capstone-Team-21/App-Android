@@ -53,13 +53,15 @@ public class AugmentedImageNode extends AnchorNode {
 
   // The augmented image represented by this node.
   private AugmentedImage image;
+  private int imgCnt;
 
   // Two kinds of bars: one vertical, one horizontal;
   // two vertical bars & two horizontal bars form a frame
   private static ModelRenderable[] bar = new ModelRenderable[2];
 
-  public AugmentedImageNode() {
+  public AugmentedImageNode(int imgCnt) {
     // Do nothing upon construction
+      this.imgCnt = imgCnt;
   }
 
   /**
@@ -84,7 +86,12 @@ public class AugmentedImageNode extends AnchorNode {
     vertices[0] = getCubeVertices(new Vector3(image.getExtentX() + 2 * frameWidth, 0.0f, frameWidth), new Vector3(0.0f, 0.0f, 0.0f));
     vertices[1] = getCubeVertices(new Vector3(frameWidth, 0.0f, image.getExtentZ() + 2 * frameWidth), new Vector3(0.0f, 0.0f, 0.0f));
     // color of frame
-    Color c = new Color(android.graphics.Color.BLUE);
+      Color c;
+      if (this.imgCnt == 0)
+          c = new Color(android.graphics.Color.BLUE);
+      else
+          c = new Color(android.graphics.Color.RED);
+
     MaterialFactory.makeTransparentWithColor(context, c).thenAccept(
             // get the bars
             material -> {
