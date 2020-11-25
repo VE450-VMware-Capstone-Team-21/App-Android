@@ -72,8 +72,11 @@ public class AugmentedImageActivity extends AppCompatActivity {
   AugmentedImageNode deviceNode;
 
   private TextView serverTextview;
+  private TextView rackTextview;
   private ViewRenderable serverRenderable;
+  private ViewRenderable rackRenderable;
   private AnchorNode serverNode;
+  private AnchorNode rackNode;
 
   private Boolean isScanSuccess = false;
 
@@ -102,6 +105,9 @@ public class AugmentedImageActivity extends AppCompatActivity {
         if (serverTextview != null){
           serverTextview.setText("");
         }
+        if (rackTextview != null){
+          rackTextview.setText("");
+        }
         if (dialogue != null){
           String status = "Detecting";
           imgCnt = 0;
@@ -115,6 +121,11 @@ public class AugmentedImageActivity extends AppCompatActivity {
             .setView(this, R.layout.server_view)
             .build()
             .thenAccept(renderable -> serverRenderable = renderable);
+
+    ViewRenderable.builder()
+            .setView(this, R.layout.rack_view)
+            .build()
+            .thenAccept(renderable -> rackRenderable = renderable);
 
     arFragment.getArSceneView().getScene().addOnUpdateListener(this::onUpdateFrame);
   }
@@ -155,6 +166,7 @@ public class AugmentedImageActivity extends AppCompatActivity {
     }
 
     serverTextview = (TextView) serverRenderable.getView();
+    rackTextview = (TextView) rackRenderable.getView();
 
     // Scan once; and once the information is obtained, no scanning before reset.
     if (!isScanSuccess) {
@@ -163,6 +175,10 @@ public class AugmentedImageActivity extends AppCompatActivity {
         serverNode.setParent(null);
         serverNode.setRenderable(null);
         serverNode = null;
+        rackNode.getAnchor().detach();
+        rackNode.setParent(null);
+        rackNode.setRenderable(null);
+        rackNode = null;
         augmentedImageMap.forEach((image, node) -> {
           arFragment.getArSceneView().getScene().removeChild(node);
           node = null;
@@ -180,6 +196,22 @@ public class AugmentedImageActivity extends AppCompatActivity {
 
           barScanning.scanBarcodes(inputImage, fc, context, serverTextview, dialogue);
           image.close();
+
+          // get rack data
+          Thread tRack = new Thread(){
+            @Override
+            public void run(){
+              fc.getAssetByNameOnScreen(context, "Cabinet0001", rackTextview);
+            }
+          };
+          tRack.start();
+          try{
+            tRack.join();
+          }
+          catch (Exception e){
+            e.printStackTrace();
+          }
+
         }
       } catch (NotYetAvailableException e) {
         Log.e("Barcode", e.getMessage());
@@ -232,12 +264,21 @@ public class AugmentedImageActivity extends AppCompatActivity {
 
               // Put the server's information near the cabinet.
               if (this.serverNode == null && imgCnt == 0) {
-                float[] pos = {augmentedImage.getCenterPose().tx() + augmentedImage.getExtentX(), augmentedImage.getCenterPose().ty(), augmentedImage.getCenterPose().tz()};
-                float[] rotation = {0, 0, 0, 90};
+                float[] pos = {augmentedImage.getCenterPose().tx() + 1.5f*augmentedImage.getExtentX(),
+                        augmentedImage.getCenterPose().ty(), augmentedImage.getCenterPose().tz()};
+                float[] rotation = {0, 1, 0, 0};
                 Anchor anchor = session.createAnchor(new Pose(pos, rotation));
                 serverNode = new AnchorNode(anchor);
                 serverNode.setRenderable(serverRenderable);
                 serverNode.setParent(arFragment.getArSceneView().getScene());
+
+                float[] pos2 = {augmentedImage.getCenterPose().tx() - 1.5f*augmentedImage.getExtentX(),
+                        augmentedImage.getCenterPose().ty(), augmentedImage.getCenterPose().tz()};
+                Anchor anchor2 = session.createAnchor(new Pose(pos2, rotation));
+                rackNode = new AnchorNode(anchor2);
+                rackNode.setRenderable(rackRenderable);
+                rackNode.setParent(arFragment.getArSceneView().getScene());
+
               }
             }
             break;
